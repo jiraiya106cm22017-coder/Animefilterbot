@@ -1,0 +1,112 @@
+main.py import os
+
+from pyrogram import Client, filters
+
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+GROUP_LINK = "https://t.me/hindi_anime_multiverse"
+
+ADMIN_IDS = [7166917078]
+
+keywords = [
+    "anime",
+    "movie",
+    "series"
+]
+
+
+app = Client(
+    "filter_bot",
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN
+)
+
+
+@app.on_message(filters.group & filters.text)
+async def auto_filter(client, message):
+
+    text = message.text.lower()
+
+    for keyword in keywords:
+        if keyword.lower() in text:
+
+            await message.reply_text(
+                "🎬 <b>Result Found!</b>\n\n"
+                f"🔗 <a href='{GROUP_LINK}'>Get File / Join Group</a>",
+                disable_web_page_preview=True
+            )
+
+            break
+
+
+@app.on_message(filters.command("addkeyword") & filters.user(ADMIN_IDS))
+async def add_keyword(client, message):
+
+    if len(message.command) < 2:
+        await message.reply_text(
+            "❌ Example:\n/addkeyword Naruto"
+        )
+        return
+
+    keyword = " ".join(message.command[1:]).lower()
+
+    if keyword in keywords:
+        await message.reply_text("⚠️ Keyword already exists.")
+        return
+
+    keywords.append(keyword)
+
+    await message.reply_text(
+        f"✅ Keyword added:\n<b>{keyword}</b>"
+    )
+
+
+@app.on_message(filters.command("delkeyword") & filters.user(ADMIN_IDS))
+async def delete_keyword(client, message):
+
+    if len(message.command) < 2:
+        await message."❌ Example:\n/delkeyword Naruto"
+        )
+        return
+
+    keyword = " ".join(message.command[1:]).lower()
+
+    if keyword not in keywords:
+        await message.reply_text(
+            "❌ Keyword nahi mila."
+        )
+        return
+
+    keywords.remove(keyword)
+
+    await message.reply_text(
+        f"🗑️ Keyword removed:\n<b>{keyword}</b>"
+    )
+
+
+@app.on_message(
+    filters.command("keywords") &
+    filters.user(ADMIN_IDS)
+)
+async def show_keywords(client, message):
+
+    if not keywords:
+        await message.reply_text(
+            "❌ Koi keyword nahi hai."
+        )
+        return
+
+    text = "📋 <b>Current Keywords</b>\n\n"
+
+    for i, keyword in enumerate(keywords, 1):
+        text += f"{i}. {keyword}\n"
+
+    await message.reply_text(text)
+
+
+print("🤖 Filter Bot Started...")
+
+app.run()
